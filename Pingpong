@@ -1,0 +1,113 @@
+import pygame
+import random
+
+# ფენის ზომა
+WIDTH = 800
+HEIGHT = 600
+
+# ფენის ფერი
+WHITE = (255, 255, 255)
+BLACK = (0, 0, 0)
+
+# რანდომი ფერები
+COLORS = [(255, 0, 0), (0, 255, 0), (0, 0, 255), (255, 255, 0), (255, 0, 255)]
+
+# ბლოკების ზომა
+BLOCK_WIDTH = 100
+BLOCK_HEIGHT = 20
+
+# ბლოკების რაოდენობა
+BLOCKS_PER_ROW = 8
+BLOCK_ROWS = 5
+
+# ბლოკების მასივი
+blocks = []
+
+# ბლოკების შექმნა
+for row in range(BLOCK_ROWS):
+    for col in range(BLOCKS_PER_ROW):
+        block_x = col * (BLOCK_WIDTH + 2) + 1
+        block_y = row * (BLOCK_HEIGHT + 2) + 50
+        color = random.choice(COLORS)
+        blocks.append(pygame.Rect(block_x, block_y, BLOCK_WIDTH, BLOCK_HEIGHT))
+
+# სურვილის ფენის მოწყობა
+pygame.init()
+screen = pygame.display.set_mode((WIDTH, HEIGHT))
+pygame.display.set_caption("Ping Pong")
+
+# ბურთის საწყისი სიდიალი
+ball_x = WIDTH // 2
+ball_y = HEIGHT // 2
+ball_dx = 5
+ball_dy = 5
+
+# მოწყობილების სიდიალი
+paddle_x = WIDTH // 2
+paddle_y = HEIGHT - 50
+
+# ქულები
+score = 0
+
+# ფუნქცია რომელიც ბურთის ხედებს ხელს ეწევა
+def draw_ball():
+    pygame.draw.circle(screen, WHITE, (ball_x, ball_y), 10)
+
+# ფუნქცია რომელიც ბლოკებს ხედებს ხელს ეწევა
+def draw_blocks():
+    for block in blocks:
+        pygame.draw.rect(screen, COLORS[blocks.index(block) % len(COLORS)], block)
+
+# ფუნქცია რომელიც შეხედავს ბლოკებზე და ამოწმებს ბურთის დახედულობის შეხვედრებს
+def check_collision():
+    global ball_dy, score
+    for block in blocks:
+        if block.collidepoint(ball_x, ball_y):
+            blocks.remove(block)
+            ball_dy = -ball_dy
+            score += 10
+
+# ფუნქცია რომელიც გამოიტანს ქულებს ეკრანზე
+def draw_score():
+    font = pygame.font.Font(None, 36)
+    text = font.render(f"Score: {score}", True, WHITE)
+    screen.blit(text, (10, 10))
+
+# თამაშის მთავარი ციკლი
+running = True
+clock = pygame.time.Clock()
+while running:
+    screen.fill(BLACK)
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            running = False
+
+    # ბლოკების და ბურთის ხედები
+    draw_blocks()
+    draw_ball()
+    draw_score()
+
+    # ბურთის გადაადგილება
+    ball_x += ball_dx
+    ball_y += ball_dy
+
+    # ბურთის შებრუნება ფენაში
+    if ball_x <= 0 or ball_x >= WIDTH:
+        ball_dx = -ball_dx
+    if ball_y <= 0:
+        ball_dy = -ball_dy
+
+    # ბურთის დაბრუნება ფენაზე და ბლოკებზე
+    if ball_y >= HEIGHT:
+        ball_dy = -ball_dy
+        score -= 10
+
+    # ბლოკების დახურვა და ბურთის შეხვედრა
+    check_collision()
+
+    # მოწყობილების გახსნა და ფანჯარაზე განახლება
+    pygame.draw.rect(screen, WHITE, (paddle_x, paddle_y, 100, 10))
+    pygame.display.flip()
+    clock.tick(60)
+
+pygame.quit()
